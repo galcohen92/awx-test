@@ -1,0 +1,36 @@
+---
+- name: Get nonce from vault
+  uri:
+    url:  http://{{ vault_hostname }}/v1/sys/generate-root/attempt
+    method: GET
+    status_code: 200
+    body_format: json
+    return_content: yes
+  register: attempt_info
+  become: no
+  when:
+    - unsealkey is defined
+  tags:
+    - never
+    - generate_root_token
+
+- name: Send shard to reconfigure
+  uri:
+    url:  http://{{ vault_hostname }}/v1/sys/generate-root/update
+    method: PUT
+    body: "{ \"key\": \"{{ unsealkey }}\", \"nonce\": \"{{ attempt_info.json.nonce }}\" }"
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    return_content: yes
+  register: update_result
+  become: no
+  when:
+    - unsealkey is defined
+    - attempt_info is defined
+    - attempt_info.json is defined
+    - attempt_info.json.nonce != ""
+  tags:
+    - never
+    - generate_root_token
+  no_log: true

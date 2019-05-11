@@ -1,0 +1,10 @@
+---
+- name: Provide Key Share to Generate Root For FSS Vault
+  hosts: all
+  gather_facts: false
+  become: yes
+  become_method: sudo
+  roles:
+    - role: vault
+      tags: vault
+  run_once: true
